@@ -5,6 +5,7 @@ go 1.21.1
 require (
 	github.com/adshao/go-binance/v2 v2.6.1
 	github.com/gorilla/websocket v1.5.0
+	github.com/joho/godotenv v1.5.1
 	github.com/spf13/viper v1.19.0
 	github.com/woungbe/utils v0.0.0-20240113081036-890dfa1c6b7b
 )
