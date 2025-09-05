@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"woungbe/updown_0.1/test/binanace/socket/price-concel/pricecache"
+
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 )
@@ -309,7 +311,7 @@ type listenKeyRes struct {
 
 // listenKey 발급 함수 (Spot)
 func getListenKey(apiKey string) (string, error) {
-	url := "https://api.binance.com/api/v3/userDataStream"
+	url := "https://fapi.binance.com/fapi/v1/listenKey"
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte{}))
 	if err != nil {
@@ -345,6 +347,8 @@ func main() {
 		log.Println(".env 파일을 찾을 수 없거나 로드 실패:", err)
 	}
 
+	store := pricecache.NewStore()
+
 
 	// 예시: 공개 시세는 BTCUSDT, ETHUSDT 구독(Spot)
 	symbols := []string{"BTCUSDT"}
@@ -363,7 +367,6 @@ func main() {
 		log.Fatal("listenKey 발급 에러:", err)
 	}
 
-
 	httpAddr := ":8080"
 	hub := NewHub()
 
@@ -372,7 +375,14 @@ func main() {
 	defer cancelPrice()
 	go func() {
 		for e := range priceCh {
-			log.Printf("[PRICE] %s bid=%.2f ask=%.2f t=%s", e.Symbol, e.BidPrice, e.AskPrice, e.RecvTime.Format(time.RFC3339))
+			// log.Printf("[PRICE] %s bid=%.2f ask=%.2f t=%s", e.Symbol, e.BidPrice, e.AskPrice, e.RecvTime.Format(time.RFC3339))
+			store.Set(e.Symbol, pricecache.Tick{
+				Bid: e.BidPrice,
+				Ask: e.AskPrice,
+				BidQty: e.BidQty,
+				AskQty: e.AskQty,
+				RecvTime: e.RecvTime,
+			})
 		}
 	}()
 
